@@ -1,45 +1,58 @@
-import { useState } from 'react'
-import logo from './logo.svg'
-import './App.css'
+import { useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import { content } from "./content";
 
-function App() {
-  const [count, setCount] = useState(0)
+export function App() {
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const leftEl = leftRef.current;
+    const rightEl = rightRef.current;
+    if (leftEl && rightEl) {
+      const height = leftEl.getBoundingClientRect().height;
+      const onLeftScroll = (event: Event) => {
+        const { scrollTop } = leftEl;
+        rightEl.scrollTop = scrollTop + height;
+      };
+      leftEl.addEventListener("scroll", onLeftScroll);
+
+      const onRightScroll = (event: Event) => {
+        const { scrollTop } = rightEl;
+        leftEl.scrollTop = scrollTop - height;
+      };
+      rightEl.addEventListener("scroll", onRightScroll);
+
+      return () => {
+        leftEl.removeEventListener("scroll", onLeftScroll);
+        rightEl.removeEventListener("scroll", onRightScroll);
+      };
+    }
+  }, []);
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>Hello Vite + React!</p>
-        <p>
-          <button type="button" onClick={() => setCount((count) => count + 1)}>
-            count is: {count}
-          </button>
-        </p>
-        <p>
-          Edit <code>App.tsx</code> and save to test HMR updates.
-        </p>
-        <p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-          {' | '}
-          <a
-            className="App-link"
-            href="https://vitejs.dev/guide/features.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Vite Docs
-          </a>
-        </p>
-      </header>
+    <div className="fixed inset-0">
+      <div
+        className="w-[50%] absolute left-0 top-0 bottom-0 overflow-y-auto scrollbar-hide"
+        ref={leftRef}
+      >
+        <Content />
+      </div>
+      <div
+        aria-hidden
+        className="w-[50%] absolute right-0 top-0 bottom-0 overflow-y-auto scrollbar-hide"
+        ref={rightRef}
+      >
+        <Content />
+      </div>
     </div>
-  )
+  );
 }
 
-export default App
+function Content() {
+  return (
+    <div className="prose mx-auto py-8">
+      <ReactMarkdown>{content}</ReactMarkdown>
+    </div>
+  );
+}
